@@ -41,14 +41,14 @@ if(",${CMAKE_SOURCE_DIR}," STREQUAL ",${CMAKE_BINARY_DIR},")
 endif()
 
 option(PERFORM_STYLE_CHECKS
-	"check coding style, license headers (requires perl)" ON)
-option(BUILD_TESTS "build and enable tests" ON)
-option(BUILD_EXAMPLES "build examples" ON)
+  "check coding style, license headers (requires perl)" OFF)
+option(BUILD_TESTS "build and enable tests" OFF)
+option(BUILD_EXAMPLES "build examples" OFF)
 option(TREAT_WARNINGS_AS_ERRORS
 	"make the build fail on any warnings during compilation, or linking" ON)
 option(EXPECT_SPURIOUS_SYSCALLS
 	"account for some unexpected syscalls in tests - enable while using sanitizers, gcov" OFF)
-option(STATIC_CAPSTONE "statically link libcapstone into the shared library" OFF)
+option(STATIC_CAPSTONE "statically link libcapstone into the shared library" ON)
 
 find_program(CTAGS ctags)
 if(CTAGS)
@@ -62,7 +62,8 @@ set(SYSCALL_INTERCEPT_VERSION_PATCH 0)
 set(SYSCALL_INTERCEPT_VERSION
 	${SYSCALL_INTERCEPT_VERSION_MAJOR}.${SYSCALL_INTERCEPT_VERSION_MINOR}.${SYSCALL_INTERCEPT_VERSION_PATCH})
 
-include(cmake/find_capstone.cmake)
+include(cmake/build_capstone.cmake)
+# include(cmake/find_capstone.cmake)
 include(GNUInstallDirs)
 include(cmake/toolchain_features.cmake)
 include(CheckLanguage)
@@ -97,6 +98,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_library(syscall_intercept_base_c OBJECT ${SOURCES_C})
 add_library(syscall_intercept_base_asm OBJECT ${SOURCES_ASM})
 add_library(syscall_intercept_base_clf OBJECT src/cmdline_filter.c)
+add_dependencies(syscall_intercept_base_c capstone_static)
 
 if(HAS_NOUNUSEDARG)
 	target_compile_options(syscall_intercept_base_asm BEFORE
@@ -153,9 +155,9 @@ target_link_libraries(syscall_intercept_shared
 target_link_libraries(syscall_intercept_static
 	INTERFACE ${CMAKE_DL_LIBS} ${capstone_LIBRARIES})
 
-set_target_properties(syscall_intercept_shared
-	PROPERTIES VERSION ${SYSCALL_INTERCEPT_VERSION}
-		   SOVERSION ${SYSCALL_INTERCEPT_VERSION_MAJOR})
+# set_target_properties(syscall_intercept_shared
+# 	PROPERTIES VERSION ${SYSCALL_INTERCEPT_VERSION}
+# 		   SOVERSION ${SYSCALL_INTERCEPT_VERSION_MAJOR})
 
 set_target_properties(syscall_intercept_shared syscall_intercept_static
 	PROPERTIES
